@@ -18,6 +18,8 @@ ASSERT_TYPES: dict = {
     "greater_equal": lambda actual, expected: actual >= expected,  # Assert greater than or equal to
     "less": lambda actual, expected: actual < expected,  # Assert less than
     "less_equal": lambda actual, expected: actual <= expected,  # Assert less than or equal to
+    "is_null": lambda actual,expected: actual == None,
+    "is_not_null": lambda actual,expected: actual != None
 }
 
 
@@ -38,20 +40,20 @@ def _get_actual_value(resp: requests.Response, expr: str):
                 "headers.Content-Type",
                 "body.code", or "data.name"
     """
-    if isinstance(expr, str):
-        if expr == "status_code":
-            return resp.status_code
-        elif expr.startswith("headers."):
-            header_key = expr[8:]
-            return resp.headers.get(header_key)
-        elif expr.startswith("body."):
-            jmes_expr = expr[5:]
-            json_data = resp.json()
-            return jmespath.jmespath(json_data, jmes_expr)
-        else:
-            return expr
-    else:
+    if isinstance(expr, int):
         return expr
+    elif expr == "status_code":
+        return resp.status_code
+    elif expr.startswith("headers."):
+        header_key = expr[8:]
+        return resp.headers.get(header_key)
+    elif expr.startswith("body."):
+        jmes_expr = expr[5:]
+        json_data = resp.json()
+        return jmespath.jmespath(json_data, jmes_expr)
+    else:
+        json_data = resp.json()
+        return jmespath.jmespath(json_data, expr)
 
 
 def api_validate(resp: requests.Response, validate_value: Optional[Dict[str, Any]]) -> None:
